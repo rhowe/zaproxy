@@ -120,8 +120,7 @@ public class ZapHeadMethod extends EntityEnclosingMethod {
      * header parser (ZapHttpParser#parseHeaders(InputStream, String)).
      */
     @Override
-    protected void readResponseHeaders(HttpState state, HttpConnection conn)
-            throws IOException, HttpException {
+    protected void readResponseHeaders(HttpState state, HttpConnection conn) throws IOException {
         getResponseHeaderGroup().clear();
 
         Header[] headers =
