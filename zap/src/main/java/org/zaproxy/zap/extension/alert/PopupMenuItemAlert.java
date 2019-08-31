@@ -189,14 +189,10 @@ public abstract class PopupMenuItemAlert extends ExtensionPopupMenuItem {
 
         count = 0;
         TreePath[] paths = treeAlert.getSelectionPaths();
-        for (int i = 0; i < paths.length; i++) {
-            TreePath nodePath = paths[i];
-            int childCount =
-                    ((DefaultMutableTreeNode) nodePath.getLastPathComponent()).getChildCount();
-            count +=
-                    childCount != 0
-                            ? childCount
-                            : (treeAlert.isPathSelected(nodePath.getParentPath()) ? 0 : 1);
+        for ( TreePath nodePath : paths )
+        {
+            int childCount = ( (DefaultMutableTreeNode) nodePath.getLastPathComponent() ).getChildCount();
+            count += childCount != 0 ? childCount : ( treeAlert.isPathSelected( nodePath.getParentPath() ) ? 0 : 1 );
         }
         return count;
     }

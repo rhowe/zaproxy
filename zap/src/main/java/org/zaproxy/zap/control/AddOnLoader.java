@@ -1024,20 +1024,20 @@ public class AddOnLoader extends URLClassLoader {
         List<ClassNameWrapper> classNames = new ArrayList<>();
         File[] listFile = file.listFiles(fileFilter);
 
-        for (int i = 0; i < listFile.length; i++) {
-            File entry = listFile[i];
-            if (entry.isDirectory()) {
-                classNames.addAll(parseClassDir(cl, entry, packageName, fileFilter));
+        for ( File entry : listFile )
+        {
+            if ( entry.isDirectory() )
+            {
+                classNames.addAll( parseClassDir( cl, entry, packageName, fileFilter ) );
                 continue;
             }
             String fileName = entry.toString();
-            int pos = fileName.indexOf(packageName);
-            if (pos > 0) {
-                String className =
-                        fileName.substring(pos)
-                                .replaceAll("\\.class$", "")
-                                .replace(File.separatorChar, '.');
-                classNames.add(new ClassNameWrapper(cl, className));
+            int pos = fileName.indexOf( packageName );
+            if ( pos > 0 )
+            {
+                String className = fileName.substring( pos ).replaceAll( "\\.class$", "" ).replace( File.separatorChar,
+                        '.' );
+                classNames.add( new ClassNameWrapper( cl, className ) );
             }
         }
         return classNames;
