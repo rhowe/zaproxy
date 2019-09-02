@@ -60,18 +60,19 @@ public class SimpleEventBus implements EventBus {
         }
         regMgmtLock.lock();
         try {
-            if (this.nameToPublisher.get(publisher.getPublisherName()) != null) {
+            final String publisherName = publisher.getPublisherName();
+            if (this.nameToPublisher.get(publisherName) != null) {
                 throw new InvalidParameterException(
                         "Publisher with name "
-                                + publisher.getPublisherName()
+                                + publisherName
                                 + " already registered by "
                                 + this.nameToPublisher
-                                        .get(publisher.getPublisherName())
+                                        .get(publisherName)
                                         .getPublisher()
                                         .getClass()
                                         .getCanonicalName());
             }
-            log.debug("registerPublisher " + publisher.getPublisherName());
+            log.debug("registerPublisher " + publisherName);
 
             RegisteredPublisher regProd = new RegisteredPublisher(publisher, eventTypes);
 
@@ -79,7 +80,7 @@ public class SimpleEventBus implements EventBus {
             // Check to see if there are any cached consumers
             danglingConsumers.removeIf(
                     regCon -> {
-                        if (regCon.getPublisherName().equals(publisher.getPublisherName())) {
+                        if (regCon.getPublisherName().equals(publisherName)) {
                             consumers.add(regCon);
                             return true;
                         }
@@ -87,7 +88,7 @@ public class SimpleEventBus implements EventBus {
                     });
 
             regProd.addConsumers(consumers);
-            this.nameToPublisher.put(publisher.getPublisherName(), regProd);
+            this.nameToPublisher.put(publisherName, regProd);
         } finally {
             regMgmtLock.unlock();
         }
@@ -101,11 +102,12 @@ public class SimpleEventBus implements EventBus {
 
         regMgmtLock.lock();
         try {
-            log.debug("unregisterPublisher " + publisher.getPublisherName());
-            RegisteredPublisher regPub = nameToPublisher.remove(publisher.getPublisherName());
+            final String publisherName = publisher.getPublisherName();
+            log.debug("unregisterPublisher " + publisherName);
+            RegisteredPublisher regPub = nameToPublisher.remove(publisherName);
             if (regPub == null) {
                 throw new InvalidParameterException(
-                        "Publisher with name " + publisher.getPublisherName() + " not registered");
+                        "Publisher with name " + publisherName + " not registered");
             }
         } finally {
             regMgmtLock.unlock();
@@ -203,16 +205,12 @@ public class SimpleEventBus implements EventBus {
             throw new InvalidParameterException("Publisher must not be null");
         }
 
-        RegisteredPublisher regPublisher = this.nameToPublisher.get(publisher.getPublisherName());
+        final String publisherName = publisher.getPublisherName();
+        RegisteredPublisher regPublisher = this.nameToPublisher.get(publisherName);
         if (regPublisher == null) {
-            throw new InvalidParameterException(
-                    "Publisher not registered: " + publisher.getPublisherName());
+            throw new InvalidParameterException("Publisher not registered: " + publisherName);
         }
-        log.debug(
-                "publishSyncEvent "
-                        + event.getEventType()
-                        + " from "
-                        + publisher.getPublisherName());
+        log.debug("publishSyncEvent " + event.getEventType() + " from " + publisherName);
         boolean foundType = false;
         for (String type : regPublisher.getEventTypes()) {
             if (event.getEventType().equals(type)) {
@@ -225,7 +223,7 @@ public class SimpleEventBus implements EventBus {
                     "Event type: "
                             + event.getEventType()
                             + " not registered for publisher: "
-                            + publisher.getPublisherName());
+                            + publisherName);
         }
 
         for (RegisteredConsumer regCon : regPublisher.getConsumers()) {
