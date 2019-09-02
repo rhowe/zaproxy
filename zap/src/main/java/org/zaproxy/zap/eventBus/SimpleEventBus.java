@@ -19,6 +19,9 @@
  */
 package org.zaproxy.zap.eventBus;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,7 +77,7 @@ public class SimpleEventBus implements EventBus {
             }
             log.debug("registerPublisher " + publisherName);
 
-            RegisteredPublisher regProd = new RegisteredPublisher(publisher, eventTypes);
+            RegisteredPublisher regProd = new RegisteredPublisher(publisher, asList(eventTypes));
 
             List<RegisteredConsumer> consumers = new ArrayList<>();
             // Check to see if there are any cached consumers
@@ -126,6 +129,8 @@ public class SimpleEventBus implements EventBus {
             throw new InvalidParameterException("Consumer must not be null");
         }
 
+        final List<String> eventTypesList = eventTypes == null ? emptyList() : asList(eventTypes);
+
         regMgmtLock.lock();
         try {
             log.debug(
@@ -137,9 +142,9 @@ public class SimpleEventBus implements EventBus {
             if (publisher == null) {
                 // Cache until the publisher registers
                 this.danglingConsumers.add(
-                        new RegisteredConsumer(consumer, eventTypes, publisherName));
+                        new RegisteredConsumer(consumer, eventTypesList, publisherName));
             } else {
-                publisher.addConsumer(consumer, eventTypes);
+                publisher.addConsumer(consumer, eventTypesList);
             }
         } finally {
             regMgmtLock.unlock();
@@ -227,9 +232,9 @@ public class SimpleEventBus implements EventBus {
         }
 
         for (RegisteredConsumer regCon : regPublisher.getConsumers()) {
-            String[] eventTypes = regCon.getEventTypes();
+            List<String> eventTypes = regCon.getEventTypes();
             boolean isListeningforEvent = false;
-            if (eventTypes == null) {
+            if (eventTypes.isEmpty()) {
                 // They are listening for all events from this publisher
                 isListeningforEvent = true;
             } else {
@@ -252,16 +257,15 @@ public class SimpleEventBus implements EventBus {
 
     private static class RegisteredConsumer {
         private EventConsumer consumer;
-        private String[] eventTypes;
+        private List<String> eventTypes;
         private String publisherName;
 
-        RegisteredConsumer(EventConsumer consumer, String[] eventTypes) {
+        RegisteredConsumer(EventConsumer consumer, List<String> eventTypes) {
             this.consumer = consumer;
             this.eventTypes = eventTypes;
         }
 
-        RegisteredConsumer(
-                EventConsumer consumer, String[] eventTypes, String publisherName) {
+        RegisteredConsumer(EventConsumer consumer, List<String> eventTypes, String publisherName) {
             this.consumer = consumer;
             this.eventTypes = eventTypes;
             this.publisherName = publisherName;
@@ -271,7 +275,7 @@ public class SimpleEventBus implements EventBus {
             return consumer;
         }
 
-        String[] getEventTypes() {
+        List<String> getEventTypes() {
             return eventTypes;
         }
 
@@ -282,10 +286,10 @@ public class SimpleEventBus implements EventBus {
 
     private static class RegisteredPublisher {
         private EventPublisher publisher;
-        private String[] eventTypes;
+        private List<String> eventTypes;
         private List<RegisteredConsumer> consumers = new CopyOnWriteArrayList<>();
 
-        RegisteredPublisher(EventPublisher publisher, String[] eventTypes) {
+        RegisteredPublisher(EventPublisher publisher, List<String> eventTypes) {
             super();
             this.publisher = publisher;
             this.eventTypes = eventTypes;
@@ -295,7 +299,7 @@ public class SimpleEventBus implements EventBus {
             return publisher;
         }
 
-        String[] getEventTypes() {
+        List<String> getEventTypes() {
             return eventTypes;
         }
 
@@ -307,7 +311,7 @@ public class SimpleEventBus implements EventBus {
             this.consumers.addAll(consumers);
         }
 
-        void addConsumer(EventConsumer consumer, String[] eventTypes) {
+        void addConsumer(EventConsumer consumer, List<String> eventTypes) {
             this.consumers.add(new RegisteredConsumer(consumer, eventTypes));
         }
 
